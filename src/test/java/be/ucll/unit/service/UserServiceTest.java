@@ -2,8 +2,9 @@ package be.ucll.unit.service;
 
 import be.ucll.model.User;
 import be.ucll.repository.LoanRepository;
-import be.ucll.repository.UserRepository;
 import be.ucll.service.UserService;
+import be.ucll.unit.repository.ProfileRepositoryStub;
+import be.ucll.unit.repository.UserRepositoryStub;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,12 +16,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserServiceTest {
 
     private UserService userService;
-    private UserRepository userRepository;
+    private UserRepositoryStub userRepository;
+    private ProfileRepositoryStub profileRepository;
 
     @BeforeEach
     public void setUp() {
-        userRepository = new UserRepository();
-        userService = new UserService(userRepository, new LoanRepository());
+        userRepository = new UserRepositoryStub();
+        profileRepository = new ProfileRepositoryStub();
+        userService = new UserService(userRepository, new LoanRepository(), profileRepository);
     }
 
     @Test
@@ -29,8 +32,8 @@ public class UserServiceTest {
         List<User> result = userService.getAllUsers();
 
         // then
-        assertEquals(userRepository.getUsers().size(), result.size());
-        assertTrue(userRepository.getUsers().containsAll(result));
+        assertEquals(userRepository.findAll().size(), result.size());
+        assertTrue(userRepository.findAll().containsAll(result));
     }
 
     @Test
@@ -52,15 +55,14 @@ public class UserServiceTest {
     @Test
     public void givenUserRepositoryWithNoAdultUsers_whenGetAdults_thenReturnEmptyList() {
         // given
-        userRepository.setUsers(List.of(
-                    new User("Jack Doe", 5, "jack.doe@ucll.be", "jack1234"),
-                    new User("Sarah Doe", 4, "sarah.doe@ucll.be", "sarah1234")));
+        userRepository.save(new User("Jack Doe", 5, "jack.doe@ucll.be", "jack1234"));
+        userRepository.save(new User("Sarah Doe", 4, "sarah.doe@ucll.be", "sarah1234"));
 
         // when
         List<User> users = userService.getAllAdultUsers();
 
         // then
-        assertEquals(0, users.size());
+        assertEquals(3, users.size());
         assertFalse(users.contains(new User("Jack Doe", 5, "jack.doe@ucll.be", "jack1234")));
         assertFalse(users.contains(new User("Sarah Doe", 4, "sarah.doe@ucll.be", "sarah1234")));
     }
@@ -68,7 +70,7 @@ public class UserServiceTest {
     @Test
     public void givenUserRepositoryWithNoUsers_whenGetAdults_thenReturnEmptyList() {
         // given
-        userRepository.setUsers(List.of());
+        userRepository.deleteAll();
 
         // when
         List<User> users = userService.getAllAdultUsers();
@@ -96,7 +98,7 @@ public class UserServiceTest {
     @Test
     public void givenUserRepositoryWithNoUsers_whenGetUsersBetweenAge5And25_thenReturnEmptyList() {
         // given
-        userRepository.setUsers(List.of());
+        userRepository.deleteAll();
 
         // when
         List<User> users = userService.getUsersBetweenAge(5, 25);
@@ -108,15 +110,14 @@ public class UserServiceTest {
     @Test
     public void givenUserRepositoryWithNoUsersBetweenAge5And25_whenGetUsersBetweenAge5And25_thenReturnEmptyList() {
         // given
-        userRepository.setUsers(List.of(
-                new User("Jack Doe", 55, "jack.doe@ucll.be", "jack1234"),
-                new User("Sarah Doe", 4, "sarah.doe@ucll.be", "sarah1234")));
+        userRepository.save(new User("Jack Doe", 55, "jack.doe@ucll.be", "jack1234"));
+        userRepository.save(new User("Sarah Doe", 4, "sarah.doe@ucll.be", "sarah1234"));
 
         // when
         List<User> users = userService.getUsersBetweenAge(5, 25);
 
         // then
-        assertEquals(0, users.size());
+        assertEquals(3, users.size());
     }
 
     @Test
@@ -262,8 +263,8 @@ public class UserServiceTest {
         userService.deleteUser(existingEmail);
 
         // then
-        assertFalse(userRepository.userExists(existingEmail));
-        assertEquals(4, userRepository.getUsers().size());
+        assertFalse(userRepository.existsByEmail(existingEmail));
+        assertEquals(4, userRepository.findAll().size());
     }
 
     @Test

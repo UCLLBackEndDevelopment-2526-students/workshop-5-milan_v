@@ -2,8 +2,8 @@ package be.ucll.unit.service;
 
 import be.ucll.model.Loan;
 import be.ucll.repository.LoanRepository;
-import be.ucll.repository.UserRepository;
 import be.ucll.service.LoanService;
+import be.ucll.unit.repository.UserRepositoryStub;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,11 +15,13 @@ public class LoanServiceTest {
 
     private LoanService loanService;
     private LoanRepository loanRepository;
+    private UserRepositoryStub userRepository;
 
     @BeforeEach
     public void setUp() {
         loanRepository = new LoanRepository();
-        loanService = new LoanService(loanRepository, new UserRepository());
+        userRepository = new UserRepositoryStub();
+        loanService = new LoanService(loanRepository, userRepository);
     }
 
     @Test

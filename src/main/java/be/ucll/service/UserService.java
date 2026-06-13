@@ -1,8 +1,10 @@
 package be.ucll.service;
 
 import be.ucll.model.Loan;
+import be.ucll.model.Profile;
 import be.ucll.model.User;
 import be.ucll.repository.LoanRepository;
+import be.ucll.repository.ProfileRepository;
 import be.ucll.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -16,11 +18,13 @@ public class UserService {
 
     private UserRepository userRepository;
     private LoanRepository loanRepository;
+    private ProfileRepository profileRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, LoanRepository loanRepository) {
+    public UserService(UserRepository userRepository, LoanRepository loanRepository, ProfileRepository profileRepository) {
         this.userRepository = userRepository;
         this.loanRepository = loanRepository;
+        this.profileRepository = profileRepository;
     }
 
     public List<User> getAllUsers() {
@@ -59,6 +63,13 @@ public class UserService {
     public User addUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("User already exists.");
+        }
+        if (user.getProfile() != null ) {
+            if (user.getAge() < 18) {
+                throw new RuntimeException("User must be at least 18 years olf to have a profile.");
+            }
+            Profile profile = profileRepository.save(user.getProfile());
+            user.setProfile(profile);
         }
         return userRepository.save(user);
     }

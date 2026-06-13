@@ -1,24 +1,32 @@
 package be.ucll.component;
 
 import be.ucll.model.User;
+import be.ucll.repository.DbInitializer;
 import be.ucll.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.List;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
+@Sql("classpath:schema.sql")
 public class UserTest {
 
     private WebTestClient webTestClient;
     private UserRepository userRepository;
+
+    @Autowired
+    private DbInitializer  dbInitializer;
 
     @Autowired
     public UserTest(WebTestClient webTestClient, UserRepository userRepository) {
@@ -26,9 +34,9 @@ public class UserTest {
         this.userRepository = userRepository;
     }
 
-    @AfterEach
-    public void resetData() {
-        userRepository.resetRepositoryData();
+    @BeforeEach
+    public void setup() {
+        dbInitializer.initialize();
     }
 
     @Test
@@ -123,6 +131,32 @@ public class UserTest {
                 .expectBody()
                 .json("""
                     {"name":"Simon","age":14,"email":"simon@synka.com","password":"mtholly1234"}
+                  """);
+    }
+
+    @Test
+    public void givenValidUserInformationWithProfile_whenCreatingAUser_thenAUserIsCreated() {
+        webTestClient
+                .post()
+                .uri("/users")
+                .header("Content-Type", "application/json")
+                .bodyValue("""
+                        {
+                          "name": "Simon",
+                          "age": "14",
+                          "email": "simon@synka.com",
+                          "password": "mtholly1234",
+                          "profile": {
+                              "bio": "Teacher at UCLL",
+                              "location": "Leuven",
+                              "interests": "Science, reading, cooking, movies"
+                            }
+                        }
+                        """)
+                .exchange().expectStatus().is2xxSuccessful()
+                .expectBody()
+                .json("""
+                    {"name":"Simon","age":14,"email":"simon@synka.com","password":"mtholly1234","profile": {"bio": "Teacher at UCLL","location": "Leuven","interests": "Science, reading, cooking, movies"}}
                   """);
     }
 

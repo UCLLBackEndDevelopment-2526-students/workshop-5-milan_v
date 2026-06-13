@@ -1,10 +1,7 @@
 package be.ucll.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Objects;
@@ -22,6 +19,7 @@ public class User {
 
     @Min(value = 0, message = "Age must be a positive integer between 0 and 101")
     @Max(value = 101, message = "Age must be a positive integer between 0 and 101")
+    @NotNull(message = "Age is required")
     private int age;
 
     @NotBlank(message = "E-mail must be a valid email format")
@@ -31,7 +29,11 @@ public class User {
     @NotBlank(message = "Password must be at least 8 characters long")
     @Length(min = 8, message = "Password must be at least 8 characters long")
     private String password;
-
+    //one to one Unidirectional relationship owner - nothing needs to be done on other side!!!
+    @OneToOne
+    @JoinColumn(name = "profile")
+    private Profile profile;
+    
     public User(String name, int age, String email, String password) {
         setName(name);
         setAge(age);
@@ -39,9 +41,23 @@ public class User {
         setPassword(password);
     }
 
+    public User (String name, int age, String email, String password, Profile profile) {
+        setName(name);
+        setAge(age);
+        setEmail(email);
+        setPassword(password);
+        setProfile(profile);
+    }
+
     protected User() {
     }
 
+    public Profile getProfile() {
+        return profile;
+    }
+    public void setProfile(Profile profile) {
+        this.profile = profile;
+    }
     public String getName() {
         return name;
     }
